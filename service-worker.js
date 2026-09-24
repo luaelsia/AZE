@@ -7,7 +7,7 @@
   캐시 이름의 버전을 올리면 이전 캐시는 activate 단계에서 삭제된다.
 */
 
-const CACHE = "aze-v1";
+const CACHE = "aze-v2";
 
 const ASSETS = [
   "./",

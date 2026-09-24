@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>넌센스 퀴즈</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ffe9a8">
+<meta name="theme-color" content="#ffe9a8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#3c3358" media="(prefers-color-scheme: dark)">
 <meta name="description" content="아이와 함께 푸는 한국 넌센스 퀴즈 268문제. 난이도 4단계, 시간 제한 없음.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,12 +16,34 @@
 <style>
   :root{
     --bg1:#ffe9a8; --bg2:#ffc7d9; --bg3:#b6e5ff;
-    --card:#fffdf7; --ink:#3b3226; --sub:#8a7c68;
-    --line:#f0e2c6;
+    --card:#fffdf7; --card2:#ffffff;
+    --ink:#3b3226; --sub:#8a7c68; --line:#f0e2c6;
+    --track:#f0e6d3; --accent:#c99a2e;
+    --ansbg:#eafbe7; --ansline:#9fdc95; --anslabel:#5c8a53; --anstext:#2f6b28;
+    --clearbg:#fff5d6; --clearline:#ffd76a; --lvclear:#f4fff2;
+    --resetline:#f3c9c9; --resettext:#c46a6a;
+    --h1shadow:#fff;
+    --shadow:rgba(120,90,40,.18);
   }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg1:#3c3358; --bg2:#4b3352; --bg3:#22384c;
+      --card:#272232; --card2:#312b3f;
+      --ink:#f1eae0; --sub:#a99d8f; --line:#413a52;
+      --track:#3b3449; --accent:#e5bb5e;
+      --ansbg:#1f3526; --ansline:#4f9057; --anslabel:#a3d8a8; --anstext:#b8f0bf;
+      --clearbg:#3a3322; --clearline:#8a7433; --lvclear:#25362a;
+      --resetline:#6b4747; --resettext:#e59a9a;
+      --h1shadow:rgba(0,0,0,.35);
+      --shadow:rgba(0,0,0,.35);
+    }
+  }
+
   *{box-sizing:border-box}
   body{
-    margin:0; min-height:100vh; padding:24px 16px 60px;
+    margin:0; min-height:100vh;
+    padding:calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+            calc(48px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
     font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
     color:var(--ink);
     background:linear-gradient(140deg,var(--bg1),var(--bg2) 45%,var(--bg3));
@@ -28,17 +51,23 @@
     display:flex; flex-direction:column; align-items:center;
     -webkit-tap-highlight-color:transparent;
   }
-  h1{
-    font-size:clamp(28px,7vw,44px); margin:8px 0 4px; text-align:center;
-    text-shadow:0 3px 0 #fff;
-  }
-  .tagline{color:#6d5f4c; margin:0 0 22px; font-size:16px; text-align:center}
-  .wrap{width:100%; max-width:640px}
-  .card{
-    background:var(--card); border-radius:24px; padding:28px 24px;
-    box-shadow:0 12px 30px rgba(120,90,40,.18);
-  }
   .hide{display:none !important}
+  .wrap{width:100%; max-width:640px}
+
+  /* 앱 머리말 (홈 화면에서만) */
+  header{text-align:center}
+  h1{
+    font-size:clamp(26px,6.4vw,40px); margin:4px 0 4px;
+    display:flex; align-items:center; justify-content:center; gap:12px;
+    text-shadow:0 3px 0 var(--h1shadow);
+  }
+  h1 img{width:1.35em; height:1.35em; border-radius:22%; display:block}
+  .tagline{color:var(--sub); margin:0 0 20px; font-size:15.5px}
+
+  .card{
+    background:var(--card); border-radius:24px; padding:26px 22px;
+    box-shadow:0 12px 30px var(--shadow);
+  }
 
   /* 난이도 선택 */
   .pick-title{font-size:20px; margin:0 0 4px; text-align:center}
@@ -46,76 +75,123 @@
   .levels{display:grid; gap:14px}
   .level{
     display:flex; align-items:center; gap:14px; width:100%; text-align:left;
-    border:3px solid var(--line); border-radius:20px; background:#fff;
+    border:3px solid var(--line); border-radius:20px; background:var(--card2);
     padding:16px 18px; cursor:pointer; font:inherit; color:inherit;
     transition:transform .12s, border-color .12s, box-shadow .12s;
   }
-  .level:hover{transform:translateY(-2px); border-color:#ffce4d; box-shadow:0 8px 18px rgba(0,0,0,.08)}
-  .level.clear{border-color:#8fd888; background:#f4fff2}
+  .level:hover{transform:translateY(-2px); border-color:#ffce4d; box-shadow:0 8px 18px var(--shadow)}
+  .level:active{transform:scale(.98)}
+  .level.clear{border-color:#8fd888; background:var(--lvclear)}
   .level .emoji{font-size:34px; line-height:1}
   .level .txt{flex:1; min-width:0}
   .level b{display:block; font-size:19px; margin-bottom:3px}
   .level .desc{display:block; font-size:13.5px; color:var(--sub); line-height:1.45}
-  .level .cnt{font-size:12.5px; color:#a7987f; white-space:nowrap; text-align:right; line-height:1.5}
-  .bar{height:7px; border-radius:99px; background:#f0e6d3; margin-top:8px; overflow:hidden}
+  .level .cnt{font-size:12.5px; color:var(--sub); white-space:nowrap; text-align:right; line-height:1.5}
+  .level .rate{color:var(--accent); font-weight:700}
+  .bar{height:7px; border-radius:99px; background:var(--track); margin-top:8px; overflow:hidden}
   .bar > i{display:block; height:100%; background:#ffbf3d; border-radius:99px; transition:width .3s}
   .level.clear .bar > i{background:#5cba54}
 
   /* 문제 화면 */
-  .topbar{display:flex; align-items:center; gap:10px; margin-bottom:6px}
-  .badge{background:#ffe08a; border-radius:999px; padding:6px 14px; font-size:14px; font-weight:700}
+  .topbar{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+  .badge{
+    background:#ffe08a; color:#3b3226; border-radius:999px;
+    padding:6px 14px; font-size:14px; font-weight:700;
+  }
   .count{margin-left:auto; font-size:14px; color:var(--sub)}
-  .qnum{color:#c99a2e; font-weight:800; font-size:15px; letter-spacing:.5px; margin-top:14px}
+  .qnum{color:var(--accent); font-weight:800; font-size:15px; letter-spacing:.5px; margin-top:16px}
   .q{
     font-size:clamp(22px,5.2vw,30px); line-height:1.5; font-weight:700;
-    margin:10px 0 26px; word-break:keep-all;
+    margin:10px 0 24px; word-break:keep-all;
   }
+
   .answer{
-    background:#eafbe7; border:3px dashed #9fdc95; border-radius:18px;
+    background:var(--ansbg); border:3px dashed var(--ansline); border-radius:18px;
     padding:20px; text-align:center; margin-bottom:8px;
+    animation:pop .28s cubic-bezier(.2,.9,.3,1.3) both;
   }
-  .answer .label{font-size:13px; color:#5c8a53; font-weight:700; margin-bottom:6px}
-  .answer .text{font-size:clamp(20px,5vw,28px); font-weight:800; color:#2f6b28; word-break:keep-all}
+  @keyframes pop{
+    from{opacity:0; transform:translateY(10px) scale(.94)}
+    to{opacity:1; transform:none}
+  }
+  .answer .label{font-size:13px; color:var(--anslabel); font-weight:700; margin-bottom:6px}
+  .answer .text{
+    font-size:clamp(20px,5vw,28px); font-weight:800; color:var(--anstext); word-break:keep-all;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .answer{animation:none}
+  }
+
+  /* 맞혔어요 / 아쉬워요 */
+  .marks{display:flex; gap:10px; margin-top:14px}
+  button.mark{
+    flex:1; border:2px solid var(--line); background:var(--card2); color:var(--sub);
+    border-radius:16px; padding:13px 8px; font:inherit; font-size:15px;
+    font-weight:700; cursor:pointer; transition:transform .1s, border-color .12s;
+  }
+  button.mark:active{transform:scale(.97)}
+  button.mark.on-ok{border-color:#5cba54; background:var(--ansbg); color:var(--anstext)}
+  button.mark.on-no{border-color:#e8b06a; background:var(--clearbg); color:var(--accent)}
+
   .clearmsg{
-    background:#fff5d6; border:2px solid #ffd76a; border-radius:16px;
+    background:var(--clearbg); border:2px solid var(--clearline); border-radius:16px;
     padding:14px; text-align:center; font-size:15px; line-height:1.6; margin-top:16px;
   }
+
   button.big{
     width:100%; border:0; border-radius:18px; padding:18px 10px;
     font:inherit; font-size:19px; font-weight:800; cursor:pointer; color:#fff;
     transition:transform .1s, filter .1s;
   }
   button.big:hover{filter:brightness(1.06)}
-  button.big:active{transform:translateY(2px)}
+  button.big:active{transform:scale(.98)}
   .b-show{background:#ff9f45}
   .b-next{background:#4bbf7a}
-  .mainbtn{margin-top:40px}
+  .mainbtn{margin-top:30px}
   .subbtns{display:flex; gap:10px; margin-top:16px}
   button.sub{
-    flex:1; background:#fff; color:var(--sub); border:2px solid var(--line);
+    flex:1; background:var(--card2); color:var(--sub); border:2px solid var(--line);
     border-radius:16px; padding:14px 8px; font:inherit; font-size:14.5px;
     font-weight:600; cursor:pointer;
   }
-  button.sub:active{transform:translateY(2px)}
-  .reset{border-color:#f3c9c9; color:#c46a6a}
+  button.sub:active{transform:scale(.97)}
+  .reset{border-color:var(--resetline); color:var(--resettext)}
 
   /* 푼 문제 목록 */
-  .list-head{display:flex; align-items:center; gap:10px; margin-bottom:16px}
-  .list-head h2{font-size:19px; margin:0}
+  #listTitle{font-size:19px; margin:0 0 6px; word-break:keep-all}
+  .list-meta{font-size:14px; color:var(--accent); font-weight:700; margin:0 0 4px}
+  .list-hint{font-size:13px; color:var(--sub); margin:0 0 14px; line-height:1.5}
+  button.sub{white-space:nowrap}
   .empty{color:var(--sub); text-align:center; padding:30px 0; line-height:1.7}
-  ol.solved{margin:0; padding-left:22px}
-  ol.solved li{padding:11px 0; border-bottom:1px solid #f3ecdd; line-height:1.5}
+  ol.solved{margin:0; padding-left:24px}
+  ol.solved li{
+    padding:12px 0; border-bottom:1px solid var(--line); line-height:1.5; cursor:pointer;
+  }
   ol.solved li:last-child{border-bottom:0}
   ol.solved .sq{font-weight:600; word-break:keep-all}
-  ol.solved .sa{color:#2f6b28; font-weight:700; font-size:14.5px; margin-top:3px; word-break:keep-all}
+  ol.solved .sq .res{font-weight:800; margin-right:5px}
+  ol.solved .res-ok{color:var(--anstext)}
+  ol.solved .res-no{color:var(--accent)}
+  ol.solved .sa{
+    color:var(--anstext); font-weight:700; font-size:14.5px;
+    margin-top:5px; word-break:keep-all;
+  }
+  ol.solved li:not(.open) .sa{display:none}
+  ol.solved li:not(.open)::after{
+    content:"답 보기"; display:inline-block; margin-top:5px;
+    font-size:12.5px; color:var(--sub); font-weight:600;
+    border:1px solid var(--line); border-radius:99px; padding:2px 9px;
+  }
 
-  footer{margin-top:22px; font-size:12.5px; color:#7d6f5c; text-align:center; line-height:1.7}
+  footer{margin-top:20px; font-size:12.5px; color:var(--sub); text-align:center; line-height:1.7}
 </style>
 </head>
 <body>
 
-<h1>🤪 넌센스 퀴즈</h1>
-<p class="tagline">시간 제한 없어요. 천천히 생각하고 답을 맞춰보세요!</p>
+<header id="appHeader">
+  <h1><img src="icons/icon-192.png" alt=""> 넌센스 퀴즈</h1>
+  <p class="tagline">시간 제한 없어요. 천천히 생각하고 답을 맞춰보세요!</p>
+</header>
 
 <div class="wrap">
 
@@ -142,6 +218,11 @@
       <div class="text" id="answerText"></div>
     </div>
 
+    <div class="marks hide" id="markRow">
+      <button class="mark" id="btnOk">맞혔어요 🙆</button>
+      <button class="mark" id="btnNo">아쉬워요 🙈</button>
+    </div>
+
     <div class="clearmsg hide" id="clearMsg"></div>
 
     <div class="mainbtn">
@@ -157,22 +238,22 @@
 
   <!-- 푼 문제 목록 -->
   <div class="card hide" id="screen-list">
-    <div class="list-head">
-      <h2 id="listTitle">푼 문제</h2>
-      <span class="count" id="listCount"></span>
-    </div>
+    <h2 id="listTitle">푼 문제</h2>
+    <p class="list-meta" id="listCount"></p>
+    <p class="list-hint" id="listHint">문제를 누르면 정답이 보입니다. 최근에 푼 것이 위에 있어요.</p>
     <div id="listBody"></div>
     <div class="subbtns">
-      <button class="sub" id="btnBackQuiz">⬅️ 퀴즈로 돌아가기</button>
-      <button class="sub reset" id="btnReset">이 난이도 기록 지우기</button>
+      <button class="sub" id="btnBackQuiz">⬅️ 퀴즈로</button>
+      <button class="sub reset" id="btnReset">기록 지우기</button>
     </div>
   </div>
 
-  <footer>
+  <footer id="appFooter">
     문제 출처: 인터넷에서 널리 쓰이는 넌센스 퀴즈 모음<br>
     (나무위키, 수수께끼 모음 블로그, 아재개그 모음 등에서 수집, 어린이용으로 선별)
   </footer>
 </div>
+
 
 <script>
 const LEVELS = {
@@ -461,28 +542,43 @@ know: [
 ]
 };
 
-const KEY = "nonsense-quiz-progress-v2";
+const KEY  = "nonsense-quiz-progress-v2";   // 푼 문제 번호 (푼 순서대로)
+const RKEY = "nonsense-quiz-results-v1";    // 맞혔는지 여부 {번호: true/false}
 const $ = id => document.getElementById(id);
 
-let progress = load();
+const isArr = v => Array.isArray(v);
+const isObj = v => !!v && typeof v === "object" && !Array.isArray(v);
+
+let progress = load(KEY,  isArr, () => []);
+let results  = load(RKEY, isObj, () => ({}));
 let cur = {level:null, idx:-1};
 
-function load(){
+function load(key, isValid, empty){
+  const out = {};
+  Object.keys(QUIZ).forEach(k => out[k] = empty());
   try{
-    const raw = localStorage.getItem(KEY);
-    const o = raw ? JSON.parse(raw) : {};
-    const out = {};
-    Object.keys(QUIZ).forEach(k => out[k] = Array.isArray(o[k]) ? o[k] : []);
-    return out;
-  }catch(e){
-    const out = {}; Object.keys(QUIZ).forEach(k => out[k] = []); return out;
-  }
+    const raw = localStorage.getItem(key);
+    if(!raw) return out;
+    const o = JSON.parse(raw);
+    Object.keys(QUIZ).forEach(k => { if(isValid(o[k])) out[k] = o[k]; });
+  }catch(e){}
+  return out;
 }
 function save(){
-  try{ localStorage.setItem(KEY, JSON.stringify(progress)); }catch(e){}
+  try{
+    localStorage.setItem(KEY, JSON.stringify(progress));
+    localStorage.setItem(RKEY, JSON.stringify(results));
+  }catch(e){}
 }
 function solvedSet(level){ return new Set(progress[level]); }
 function isClear(level){ return solvedSet(level).size >= QUIZ[level].length; }
+
+/* 맞힌 개수 / 표시한 개수 */
+function score(level){
+  const r = results[level] || {};
+  const keys = Object.keys(r);
+  return {ok: keys.filter(k => r[k]).length, marked: keys.length};
+}
 
 /* ---------- 홈 화면 ---------- */
 function renderHome(){
@@ -491,6 +587,9 @@ function renderHome(){
   Object.keys(LEVELS).forEach(key=>{
     const L = LEVELS[key], total = QUIZ[key].length, done = solvedSet(key).size;
     const pct = Math.round(done/total*100);
+    const s = score(key);
+    const rate = s.marked
+      ? `<br><span class="rate">맞힘 ${Math.round(s.ok/s.marked*100)}%</span>` : "";
     const b = document.createElement("button");
     b.className = "level" + (done>=total ? " clear" : "");
     b.innerHTML =
@@ -500,7 +599,7 @@ function renderHome(){
          <span class="desc">${L.desc}</span>
          <span class="bar"><i style="width:${pct}%"></i></span>
        </span>
-       <span class="cnt">${done} / ${total}<br>${done>=total ? "올클리어!" : "푼 문제"}</span>`;
+       <span class="cnt">${done} / ${total}<br>${done>=total ? "올클리어!" : "푼 문제"}${rate}</span>`;
     b.onclick = ()=>start(key);
     box.appendChild(b);
   });
@@ -541,10 +640,28 @@ function render(){
   $("btnShow").classList.remove("hide");
   $("btnNext").classList.add("hide");
   $("clearMsg").classList.add("hide");
+  $("markRow").classList.add("hide");
+  paintMarks();
   $("counter").textContent = `푼 문제 ${done} / ${total}`;
   $("barFill").style.width = Math.round(done/total*100) + "%";
   window.scrollTo({top:0, behavior:"smooth"});
 }
+
+/* 맞혔어요 / 아쉬워요 버튼 상태 */
+function paintMarks(){
+  const r = (results[cur.level] || {})[cur.idx];
+  $("btnOk").classList.toggle("on-ok", r === true);
+  $("btnNo").classList.toggle("on-no", r === false);
+}
+
+function mark(ok){
+  if(!results[cur.level]) results[cur.level] = {};
+  results[cur.level][cur.idx] = ok;
+  save();
+  paintMarks();
+}
+$("btnOk").onclick = ()=> mark(true);
+$("btnNo").onclick = ()=> mark(false);
 
 $("btnShow").onclick = ()=>{
   const level = cur.level;
@@ -560,6 +677,8 @@ $("btnShow").onclick = ()=>{
   $("answerBox").classList.remove("hide");
   $("btnShow").classList.add("hide");
   $("btnNext").classList.remove("hide");
+  $("markRow").classList.remove("hide");
+  paintMarks();
 
   if(!wasClear && isClear(level)){
     $("clearMsg").innerHTML =
@@ -574,20 +693,29 @@ $("btnNext").onclick = pickNext;
 /* ---------- 푼 문제 목록 ---------- */
 function renderList(){
   const level = cur.level, list = QUIZ[level];
-  const ids = progress[level].slice();
+  const ids = progress[level].slice().reverse();   // 최근에 푼 것이 위로
+  const s = score(level);
   $("listTitle").textContent = `${LEVELS[level].emoji} ${LEVELS[level].name} 푼 문제`;
-  $("listCount").textContent = `${ids.length} / ${list.length}`;
+  $("listCount").textContent = s.marked
+    ? `${ids.length} / ${list.length}문제, 맞힘 ${s.ok}개`
+    : `${ids.length} / ${list.length}문제`;
   const body = $("listBody");
   if(ids.length === 0){
+    $("listHint").classList.add("hide");
     body.innerHTML = `<div class="empty">아직 푼 문제가 없어요.<br>정답을 보면 여기에 쌓입니다 📒</div>`;
     return;
   }
+  $("listHint").classList.remove("hide");
+  const r = results[level] || {};
   const ol = document.createElement("ol");
   ol.className = "solved";
   ids.forEach(i=>{
     const [q,a] = list[i];
     const li = document.createElement("li");
-    li.innerHTML = `<div class="sq">${q}</div><div class="sa">-> ${a}</div>`;
+    const badge = i in r
+      ? `<span class="res ${r[i] ? "res-ok" : "res-no"}">${r[i] ? "O" : "X"}</span>` : "";
+    li.innerHTML = `<div class="sq">${badge}${q}</div><div class="sa">-> ${a}</div>`;
+    li.onclick = ()=> li.classList.toggle("open");
     ol.appendChild(li);
   });
   body.innerHTML = "";
@@ -599,6 +727,10 @@ function show(id){
   ["screen-home","screen-quiz","screen-list"].forEach(s=>{
     $(s).classList.toggle("hide", s !== id);
   });
+  // 제목과 출처는 홈에서만 보여서, 퀴즈 화면은 문제에 집중되게 한다.
+  const home = id === "screen-home";
+  $("appHeader").classList.toggle("hide", !home);
+  $("appFooter").classList.toggle("hide", !home);
   window.scrollTo({top:0, behavior:"smooth"});
 }
 
@@ -608,6 +740,7 @@ $("btnHome").onclick = ()=>{ renderHome(); show("screen-home"); };
 $("btnReset").onclick = ()=>{
   if(confirm(`'${LEVELS[cur.level].name}' 난이도의 푼 문제 기록을 모두 지울까요?`)){
     progress[cur.level] = [];
+    results[cur.level] = {};
     save();
     renderList();
     render();
