@@ -7,7 +7,7 @@
   캐시 이름의 버전을 올리면 이전 캐시는 activate 단계에서 삭제된다.
 */
 
-const CACHE = "aze-v2";
+const CACHE = "aze-v3";
 
 const ASSETS = [
   "./",
@@ -21,7 +21,10 @@ const ASSETS = [
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE)
-      .then(cache => cache.addAll(ASSETS))
+      // cache:"reload" 로 받아야 브라우저 HTTP 캐시에 남은 옛 파일을 건너뛴다.
+      .then(cache => cache.addAll(
+        ASSETS.map(url => new Request(url, {cache: "reload"}))
+      ))
       .then(() => self.skipWaiting())
   );
 });
@@ -44,8 +47,13 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  // 페이지(HTML)는 서버에 매번 물어봐서 최신인지 확인한다.
+  // GitHub Pages 가 붙이는 max-age 때문에 옛 HTML 이 계속 나오는 것을 막는다.
+  const wantsFresh = req.mode === "navigate" || req.destination === "document";
+  const netReq = wantsFresh ? new Request(req.url, {cache: "no-cache"}) : req;
+
   event.respondWith(
-    fetch(req)
+    fetch(netReq)
       .then(res => {
         // 정상 응답만 캐시에 갱신해 둔다.
         if (res && res.status === 200 && res.type === "basic") {
