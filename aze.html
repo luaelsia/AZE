@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>넌센스 퀴즈</title>
+<style>
+  :root{
+    --bg1:#ffe9a8; --bg2:#ffc7d9; --bg3:#b6e5ff;
+    --card:#fffdf7; --ink:#3b3226; --sub:#8a7c68;
+    --line:#f0e2c6;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; padding:24px 16px 60px;
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    color:var(--ink);
+    background:linear-gradient(140deg,var(--bg1),var(--bg2) 45%,var(--bg3));
+    background-attachment:fixed;
+    display:flex; flex-direction:column; align-items:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1{
+    font-size:clamp(28px,7vw,44px); margin:8px 0 4px; text-align:center;
+    text-shadow:0 3px 0 #fff;
+  }
+  .tagline{color:#6d5f4c; margin:0 0 22px; font-size:16px; text-align:center}
+  .wrap{width:100%; max-width:640px}
+  .card{
+    background:var(--card); border-radius:24px; padding:28px 24px;
+    box-shadow:0 12px 30px rgba(120,90,40,.18);
+  }
+  .hide{display:none !important}
+
+  /* 난이도 선택 */
+  .pick-title{font-size:20px; margin:0 0 4px; text-align:center}
+  .pick-sub{font-size:14px; color:var(--sub); margin:0 0 20px; text-align:center}
+  .levels{display:grid; gap:14px}
+  .level{
+    display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    border:3px solid var(--line); border-radius:20px; background:#fff;
+    padding:16px 18px; cursor:pointer; font:inherit; color:inherit;
+    transition:transform .12s, border-color .12s, box-shadow .12s;
+  }
+  .level:hover{transform:translateY(-2px); border-color:#ffce4d; box-shadow:0 8px 18px rgba(0,0,0,.08)}
+  .level.clear{border-color:#8fd888; background:#f4fff2}
+  .level .emoji{font-size:34px; line-height:1}
+  .level .txt{flex:1; min-width:0}
+  .level b{display:block; font-size:19px; margin-bottom:3px}
+  .level .desc{display:block; font-size:13.5px; color:var(--sub); line-height:1.45}
+  .level .cnt{font-size:12.5px; color:#a7987f; white-space:nowrap; text-align:right; line-height:1.5}
+  .bar{height:7px; border-radius:99px; background:#f0e6d3; margin-top:8px; overflow:hidden}
+  .bar > i{display:block; height:100%; background:#ffbf3d; border-radius:99px; transition:width .3s}
+  .level.clear .bar > i{background:#5cba54}
+
+  /* 문제 화면 */
+  .topbar{display:flex; align-items:center; gap:10px; margin-bottom:6px}
+  .badge{background:#ffe08a; border-radius:999px; padding:6px 14px; font-size:14px; font-weight:700}
+  .count{margin-left:auto; font-size:14px; color:var(--sub)}
+  .qnum{color:#c99a2e; font-weight:800; font-size:15px; letter-spacing:.5px; margin-top:14px}
+  .q{
+    font-size:clamp(22px,5.2vw,30px); line-height:1.5; font-weight:700;
+    margin:10px 0 26px; word-break:keep-all;
+  }
+  .answer{
+    background:#eafbe7; border:3px dashed #9fdc95; border-radius:18px;
+    padding:20px; text-align:center; margin-bottom:8px;
+  }
+  .answer .label{font-size:13px; color:#5c8a53; font-weight:700; margin-bottom:6px}
+  .answer .text{font-size:clamp(20px,5vw,28px); font-weight:800; color:#2f6b28; word-break:keep-all}
+  .clearmsg{
+    background:#fff5d6; border:2px solid #ffd76a; border-radius:16px;
+    padding:14px; text-align:center; font-size:15px; line-height:1.6; margin-top:16px;
+  }
+  button.big{
+    width:100%; border:0; border-radius:18px; padding:18px 10px;
+    font:inherit; font-size:19px; font-weight:800; cursor:pointer; color:#fff;
+    transition:transform .1s, filter .1s;
+  }
+  button.big:hover{filter:brightness(1.06)}
+  button.big:active{transform:translateY(2px)}
+  .b-show{background:#ff9f45}
+  .b-next{background:#4bbf7a}
+  .mainbtn{margin-top:40px}
+  .subbtns{display:flex; gap:10px; margin-top:16px}
+  button.sub{
+    flex:1; background:#fff; color:var(--sub); border:2px solid var(--line);
+    border-radius:16px; padding:14px 8px; font:inherit; font-size:14.5px;
+    font-weight:600; cursor:pointer;
+  }
+  button.sub:active{transform:translateY(2px)}
+  .reset{border-color:#f3c9c9; color:#c46a6a}
+
+  /* 푼 문제 목록 */
+  .list-head{display:flex; align-items:center; gap:10px; margin-bottom:16px}
+  .list-head h2{font-size:19px; margin:0}
+  .empty{color:var(--sub); text-align:center; padding:30px 0; line-height:1.7}
+  ol.solved{margin:0; padding-left:22px}
+  ol.solved li{padding:11px 0; border-bottom:1px solid #f3ecdd; line-height:1.5}
+  ol.solved li:last-child{border-bottom:0}
+  ol.solved .sq{font-weight:600; word-break:keep-all}
+  ol.solved .sa{color:#2f6b28; font-weight:700; font-size:14.5px; margin-top:3px; word-break:keep-all}
+
+  footer{margin-top:22px; font-size:12.5px; color:#7d6f5c; text-align:center; line-height:1.7}
+</style>
+</head>
+<body>
+
+<h1>🤪 넌센스 퀴즈</h1>
+<p class="tagline">시간 제한 없어요. 천천히 생각하고 답을 맞춰보세요!</p>
+
+<div class="wrap">
+
+  <!-- 난이도 선택 -->
+  <div class="card" id="screen-home">
+    <p class="pick-title">난이도를 골라주세요</p>
+    <p class="pick-sub">아이와 함께라면 <b>말랑말랑</b>부터 시작해보세요 😊</p>
+    <div class="levels" id="levels"></div>
+  </div>
+
+  <!-- 퀴즈 -->
+  <div class="card hide" id="screen-quiz">
+    <div class="topbar">
+      <span class="badge" id="lvBadge">😄 말랑말랑</span>
+      <span class="count" id="counter"></span>
+    </div>
+    <div class="bar"><i id="barFill" style="width:0%"></i></div>
+
+    <div class="qnum">Q.</div>
+    <div class="q" id="question"></div>
+
+    <div class="answer hide" id="answerBox">
+      <div class="label">정답</div>
+      <div class="text" id="answerText"></div>
+    </div>
+
+    <div class="clearmsg hide" id="clearMsg"></div>
+
+    <div class="mainbtn">
+      <button class="big b-show" id="btnShow">정답 보기 👀</button>
+      <button class="big b-next hide" id="btnNext">다음 문제 ➡️</button>
+    </div>
+
+    <div class="subbtns">
+      <button class="sub" id="btnList">📒 푼 문제 보기</button>
+      <button class="sub" id="btnHome">⬅️ 난이도 고르기</button>
+    </div>
+  </div>
+
+  <!-- 푼 문제 목록 -->
+  <div class="card hide" id="screen-list">
+    <div class="list-head">
+      <h2 id="listTitle">푼 문제</h2>
+      <span class="count" id="listCount"></span>
+    </div>
+    <div id="listBody"></div>
+    <div class="subbtns">
+      <button class="sub" id="btnBackQuiz">⬅️ 퀴즈로 돌아가기</button>
+      <button class="sub reset" id="btnReset">이 난이도 기록 지우기</button>
+    </div>
+  </div>
+
+  <footer>
+    문제 출처: 인터넷에서 널리 쓰이는 넌센스 퀴즈 모음<br>
+    (나무위키, 수수께끼 모음 블로그, 아재개그 모음 등에서 수집, 어린이용으로 선별)
+  </footer>
+</div>
+
+<script>
+const LEVELS = {
+  easy:   {emoji:"😄", name:"말랑말랑",  desc:"초등 저학년도 술술! 쉬운 말장난"},
+  normal: {emoji:"🙂", name:"보통",      desc:"조금만 생각하면 무릎을 탁!"},
+  hard:   {emoji:"🤔", name:"어려움",    desc:"줄임말, 비틀기 고수용"},
+  know:   {emoji:"🧠", name:"상식 필요", desc:"나라, 인물, 지명을 알아야 풀려요"}
+};
+
+const QUIZ = {
+easy: [
+ ["닦으면 닦을수록 더러워지는 것은?","걸레"],
+ ["내려올 때는 기분 좋고, 올라갈 때는 힘든 것은?","미끄럼틀"],
+ ["한번 올라가면 절대 내려오지 않는 것은?","나이"],
+ ["때리면 때릴수록 칭찬받는 것은?","안마"],
+ ["더울수록 눈물을 많이 흘리는 것은?","얼음"],
+ ["눈이 녹으면 무엇이 될까요?","눈물"],
+ ["세상에서 가장 빠른 닭은?","후다닥"],
+ ["세상에서 가장 빨리 만든 떡은?","헐레벌떡"],
+ ["초등학생이 가장 좋아하는 동네는?","방학동"],
+ ["진짜 문제투성이인 것은?","시험지"],
+ ["세상에서 가장 예쁜 개는?","무지개"],
+ ["병아리가 제일 잘 먹는 약은?","삐약"],
+ ["먹을 수 있는 제비는?","수제비"],
+ ["아무도 탈 수 없는 말은?","거짓말"],
+ ["발이 두 개 달린 소는?","이발소"],
+ ["세상에서 가장 뜨거운 바다는?","열바다"],
+ ["세상에서 가장 추운 바다는?","썰렁해"],
+ ["고기를 먹을 때마다 따라오는 개는?","이쑤시개"],
+ ["별 중에서 가장 슬픈 별은?","이별"],
+ ["새 중에 진짜 새는?","참새"],
+ ["사람이 살면서 가장 많이 내는 소리는?","숨소리"],
+ ["아무리 예뻐도 미녀라고 부를 수 없는 사람은?","미남"],
+ ["겨울에 쓰는 끈은?","따끈따끈"],
+ ["딱 세 사람만 탈 수 있는 차는?","인삼차"],
+ ["중학생과 고등학생이 타는 차는?","중고차"],
+ ["소가 웃는 소리를 세 글자로 하면?","우하하"],
+ ["토끼가 제일 잘하는 것은?","토끼기(도망가기)"],
+ ["사람들이 가장 좋아하는 물은?","선물"],
+ ["세상에서 제일 무서운 물은?","괴물"],
+ ["아무리 애써도 닫을 수 없는 문은?","소문"],
+ ["학벌이 가장 좋은 물고기는?","고등어"],
+ ["세상에서 가장 빠른 벌레는?","바퀴벌레"],
+ ["세상에서 가장 비싼 새는?","백조"],
+ ["발이 없어도 잘 가고, 손이 없어도 잘 만지는 것은?","바람"],
+ ["겉은 새빨갛고 속에는 까만 깨가 잔뜩 박힌 것은?","수박"],
+ ["아주 가까이 있는데도 서로 볼 수 없는 것은?","눈(두 눈)"],
+ ["양 중에서 가장 뜨거운 양은?","태양"],
+ ["양파를 까면 나오는 것은?","눈물"],
+ ["세상에서 가장 큰 콩은?","홍콩"],
+ ["왕이 넘어지면?","킹콩(King 쿵!)"],
+ ["돼지가 방귀를 뀌면?","돈가스(돈+가스)"],
+ ["좀비가 두 마리 있으면?","콤비"],
+ ["사과가 활짝 웃으면?","풋사과(풋! 하고 웃어서)"],
+ ["맞아야 사는 것은?","팽이"],
+ ["물고기의 반댓말은?","불고기"],
+ ["커도 작다고 하는 나무는?","소나무"],
+ ["작아도 크다고 하는 나무는?","대나무"],
+ ["오리가 뒤로 쓰러지면?","철퍼덕"],
+ ["오리고기를 생으로 먹으면?","회오리"],
+ ["펭귄이 다니는 중학교는?","냉방중"],
+ ["파이는 파이인데 먹을 수 없는 파이는?","스파이"],
+ ["팥이 목마를 때 콩에게 하는 말은?","콩나물"],
+ ["소가 한 마리만 있으면?","소원(소 one)"],
+ ["가장 더러운 집은?","똥집"],
+ ["톡톡 튀어 오르는 똥은?","불똥"],
+ ["청소년들이 타고 다니는 차는?","청소차"],
+ ["도둑이 가장 싫어하는 아이스크림은?","누가바"],
+ ["도둑이 가장 좋아하는 아이스크림은?","보석바"],
+ ["감은 감인데 어린이가 가장 좋아하는 감은?", "장난감"],
+ ["가만히 있는데도 뺨을 맞는 것은?", "성냥"],
+ ["금은 금인데 비싸지 않은 금은?", "소금"],
+ ["언제나 손에 쥐고 다니는 금은?", "손금"],
+ ["귀는 하나뿐인데 일을 아주 잘하는 것은?", "바늘"],
+ ["겉은 보름달, 속은 반달인 것은?", "귤"],
+ ["기둥은 하나인데 방이 두 개인 것은?", "코"],
+ ["깨는 깨인데 먹지 못하는 깨는?", "주근깨"],
+ ["꽃만 먹고 사는 것은?", "꽃병"],
+ ["공부 시간에 공부를 안 해도 혼나지 않는 사람은?", "선생님"],
+ ["학교에 가지만 공부는 하지 않는 것은?", "가방"],
+ ["씨는 씨인데 심어도 싹이 나지 않는 씨는?", "솜씨"],
+ ["나무로 짓는 밥은?", "톱밥"],
+ ["날개가 있어도 날지 못하고 윙윙 소리만 내는 것은?", "선풍기"],
+ ["늙을수록 젊어 보이는 것은?", "사진"],
+ ["나무에 물을 주면 죽는 것은?", "불"],
+ ["나리인데 허리를 굽히지 않는 나리는?", "개나리"],
+ ["더운 날에만 일하는 것은?", "에어컨"],
+ ["여름에 일하고 겨울에 쉬는 것은?", "부채"],
+ ["맞아 오면 엄마가 좋아하는 것은?", "백점"],
+ ["삼각 모자를 쓰고 다리가 열 개인 것은?", "오징어"],
+ ["다리는 튼튼한데 갈비는 얇은 것은?", "사다리"],
+ ["뒤로 가면 이기고 앞으로 가면 지는 것은?", "줄다리기"],
+ ["달리면 똑바로 서고 멈추면 쓰러지는 것은?", "자전거"],
+ ["들어갈 때는 딱딱하고 나올 때는 말랑한 것은?", "껌"],
+ ["두들기면 조용히 일어나는 것은?", "먼지"],
+ ["날지 못하는 제비는?", "족제비"],
+ ["많이 먹을수록 하늘로 올라가는 것은?", "풍선"],
+ ["다리는 있는데 발이 없는 것은?", "바지"],
+ ["비는 비인데 뜯어 먹을 수 있는 비는?", "갈비"],
+ ["불이 붙지 않는 초는?", "식초"],
+ ["비가 오면 피고 비가 그치면 지는 것은?", "우산"],
+ ["밤에는 절대로 볼 수 없는 것은?", "해"],
+ ["산에서 내 말을 따라 하는 것은?", "메아리"],
+ ["이 중에서 가장 마지막에 나는 이는?", "틀니"],
+ ["틀릴 때마다 찾아오는 것은?", "지우개"],
+ ["온몸이 새하얀 사람은?", "눈사람"],
+ ["밤에도 쉬지 않고 일하는 것은?", "시계"],
+ ["고양이를 무서워하지 않는 쥐는?", "박쥐"],
+ ["말은 말인데 탈 수 없는 말은?", "양말"],
+ ["가장 오래 사는 곤충은?", "장수풍뎅이"],
+ ["과일 중에서 가장 뜨거운 과일은?", "천도복숭아"],
+ ["방바닥보다 높이 있는 바닥은?", "발바닥"],
+ ["거꾸로 자라는 것은?", "고드름"],
+ ["초록 주머니에는 은돈, 빨간 주머니에는 금돈이 들어 있는 것은?", "고추"],
+ ["계절에 상관없이 언제나 피는 꽃은?", "웃음꽃"],
+ ["먹어도 먹어도 배부르지 않은 것은?", "공기"],
+ ["늘 등에 집을 지고 다니는 것은?", "달팽이"],
+ ["칼로 잘라도 잘라지지 않는 것은?", "물"],
+ ["같은 물건인데 사람마다 다르게 보이는 것은?", "거울"],
+ ["마귀가 넷이면?", "사마귀"],
+ ["물고기 중에서 가장 비싼 물고기는?", "금붕어"],
+ ["팽이는 팽이인데 돌지 못하는 팽이는?", "달팽이"],
+ ["곰이 목욕하는 탕은?", "곰탕"],
+ ["하늘에서 싸는 똥은?", "별똥별"],
+ ["자루는 자루인데 아무것도 담을 수 없는 자루는?", "빗자루"],
+ ["누구든지 들 수 있는 산은?", "우산"],
+ ["검은색이어도 흰색이어도 붉은색이어도 언제나 까맣게 보이는 것은?", "그림자"],
+ ["자동차를 툭 치면?", "카톡"],
+ ["바나나가 웃으면?", "바나나킥"],
+ ["고추가 웃으면?", "풋고추"],
+ ["곰돌이 푸가 넘어지면?", "쿵푸"],
+ ["신발이 짜증 나면?", "발끈"],
+ ["떼돈을 버는 곳은?", "목욕탕"]
+],
+normal: [
+ ["못 먹는 닭은?","까닭"],
+ ["입으로 먹고 등 뒤로 내뱉는 것은?","대패"],
+ ["개미네 집 주소는?","허리도 가늘군 만지면 부러지리"],
+ ["서울 시민이 한꺼번에 소리치면?","천만의 말씀"],
+ ["도둑고양이에게 가장 어울리는 금은?","야금야금"],
+ ["사람의 몸무게가 가장 많이 나갈 때는?","철들 때"],
+ ["개가 사람을 가르치는 것을 네 글자로 하면?","개인지도"],
+ ["아기가 잠을 자고 있는 것을 네 글자로 하면?","아기자기"],
+ ["씨름 선수들이 죽 늘어서 있는 것을 세 글자로 하면?","장사진"],
+ ["양초 창고에 양초가 꽉 차 있으면?","초만원"],
+ ["서로 자기가 진짜라고 우기는 신은?","옥신각신"],
+ ["목수도 절대 고치지 못하는 집은?","고집"],
+ ["절대로 먹을 수 없는 묵은?","침묵"],
+ ["아무도 본 적이 없는 다리는?","헛다리"],
+ ["귀는 귀인데 듣지 못하는 귀는?","뼈다귀"],
+ ["배우기 위해서 마시는 술은?","기술"],
+ ["아껴 먹어야 하는 약은?","절약"],
+ ["아무도 읽을 수 없는 책은?","주책"],
+ ["웃으면서 읽는 글은?","싱글벙글"],
+ ["눈은 눈인데 보지 못하는 눈은?","티눈, 쌀눈"],
+ ["자라에게 해주는 말은?","자라라 자라"],
+ ["공중에서 모두가 좋아하는 공은?","성공"],
+ ["걱정이 많은 사람이 오르는 산은?","태산"],
+ ["아무도 쓸 수 없는 바가지는?","해골바가지"],
+ ["평생 배우기만 하는 사람은?","배우"],
+ ["사람들이 제일 싫어하는 거리는?","걱정거리"],
+ ["찔릴 때 하는 말은?","창피해(창 피해!)"],
+ ["세상에서 가장 알찬 장사는?","알장사"],
+ ["노총각이 가장 좋아하는 감은?","색시감"],
+ ["먹고살기 위해 하는 내기는?","모내기"],
+ ["감은 감인데 먹을 수 없는 감은?","옷감, 영감, 대감"],
+ ["먹을 수 없는 간장은?","애간장"],
+ ["도시락 먹기 싫을 때 내는 것은?","가위나 바위 (보를 안 내니까)"],
+ ["도둑이 도둑질하러 갈 때의 걸음걸이는?","털레털레(털러 가니까)"],
+ ["세상에서 가장 쉬운 숫자는?","십구만 (쉽구만)"],
+ ["거꾸로 서면 3분의 1을 손해 보는 숫자는?","9 (거꾸로 서면 6)"],
+ ["집은 집인데 사람이 들어갈 수 없는 집은?","고집, 거푸집"],
+ ["닭이 몸에 꽉 끼는 바지를 입고 하는 말은?","꼬끼오(꽉 끼어)"],
+ ["차장님의 성씨가 주씨이면?","주차장"],
+ ["추억을 만들어 돈을 버는 사람은?","사진사"],
+ ["할아버지와 할머니가 지팡이를 짚고 다니는 것을 네 글자로 하면?","갈팡질팡"],
+ ["거꾸로 매달린 집에 수십 개의 문이 있는 것은?","벌집"],
+ ["거지가 빨간색 말을 타고 가면?","새빨간 거짓말"],
+ ["돈은 돈인데 혼인을 해야 생기는 돈은?","사돈"],
+ ["많이 맞을수록 좋은 것은?","시험 문제"],
+ ["날마다 가슴에 흑심을 품고 있는 것은?","연필"],
+ ["항상 위로 올라가는 물은?","음식물 (위(胃)로 가니까)"],
+ ["하다가 잘못되면 코를 풀어서 다시 하는 것은?","뜨개질"],
+ ["못 팔고도 돈을 번 사람은?","철물점 주인 (못을 팔아서)"],
+ ["한 사람만 들어가도 만원이 되는 곳은?", "화장실"],
+ ["많이 먹어도 살찌지 않는 것은?", "욕"],
+ ["낮에는 꽉 차고 밤에는 텅 비는 것은?", "이불장"],
+ ["깊은 골짜기에서 피리를 불며 나오는 것은?", "방귀"],
+ ["만원 버스 안에서도 늘 앉아서 가는 사람은?", "운전사"],
+ ["모두가 들어가기 싫어하는 방은?", "감방"],
+ ["병균 중에서 가장 지위가 높은 병균은?", "대장균"],
+ ["일 년에 딱 한 번만 먹을 수 있는 것은?", "나이"],
+ ["사 오고도 못 사 왔다고 하는 것은?", "못"],
+ ["상인보다 농부가 더 잘 파는 것은?", "땅"],
+ ["모으면 버리는 것은?", "쓰레기"],
+ ["신부는 신부인데 신랑이 없는 신부는?", "천주교 신부"],
+ ["도둑이 들어와도 꼬리를 치는 개는?", "도둑 집 개"],
+ ["종이 여러 장을 단짝 친구로 만들어 주는 것은?", "풀, 스테이플러"],
+ ["김밥이 죽으면?", "김밥천국"],
+ ["세상에서 가장 잔인한 비빔밥은?", "산채비빔밥"],
+ ["세상에서 가장 긴 음식은?", "참기름"],
+ ["참기름 다음으로 긴 음식은?", "들기름"],
+ ["아이스크림이 가수가 될 수 없는 이유는?", "녹음이 안 되니까"],
+ ["머리숱이 없는 사람들이 사랑에 빠지면 안 되는 이유는?", "헤어 나올 수 없어서"],
+ ["가는 말이 고와야 오는 말은?", "Come"],
+ ["아빠한테 선물하기 좋은 차는?", "아반떼"]
+],
+hard: [
+ ["세상에서 가장 더러운 강은?","요강"],
+ ["나무가 네 그루 있으면?","목포(木 four)"],
+ ["새우가 가장 좋아하는 소설은?","대하소설"],
+ ["'눈치코치'의 뜻을 넌센스로 풀면?","눈도 치고 코도 친다"],
+ ["'오리지날'의 뜻을 넌센스로 풀면?","오리도 지날 수 있다"],
+ ["'요조숙녀'의 뜻을 넌센스로 풀면?","요강에 조용히 앉아 있는 숙녀"],
+ ["'황당무계'의 뜻을 넌센스로 풀면?","노란 당근이 무게가 더 나간다"],
+ ["'천고마비'의 뜻을 넌센스로 풀면?","하늘에 고약한 짓을 하면 마비된다"],
+ ["'엉성하다'의 뜻을 넌센스로 풀면?","엉덩이가 풍성하다"],
+ ["'고인돌'의 뜻을 넌센스로 풀면?","고릴라가 인간을 돌로 보던 시대"],
+ ["한글의 자식 셋을 세 글자로 하면?","아이구 (ㅏ, ㅣ, ㅜ)"],
+ ["수학을 딱 한 글자로 줄이면?","솩"],
+ ["A젖소와 B젖소가 싸웠는데 왜 B가 이겼을까?","A가 \"에이, 져쏘\"라고 해서"],
+ ["주씨 성을 가진 남자가 결혼하면 무엇이 될까?","주사위(주 사위)"],
+ ["'다정함'의 반대말은?","선택장애 (다 정하지 못해서)"],
+ ["사람의 코피로 만든 커피는?","커피(coffee = 코피)"],
+ ["소가 죽으면 뭐가 될까? (세 글자)","다이소 (die 소)"],
+ ["소가 노래를 부르면?","소송(소 song)"],
+ ["소가 두 마리면?","투우(two 우)"],
+ ["미국에 비가 오면?","USB (US에 비)"],
+ ["머리가 세 개 있으면?","헤드셋 (head 셋)"],
+ ["자동차 10대가 나란히 달리는 길은?","커튼레일 (car 10 rail)"],
+ ["자동차 문을 세게 닫으면 안 되는 이유는?","카놀라유 (car 놀라유)"],
+ ["허수아비의 옷을 벗기면?","십자가"],
+ ["날마다 분식회계가 이루어지는 곳은?","분식집"],
+ ["소가 가장 무서워하는 말은?","\"소피 보러 간다\""],
+ ["새 중에 제일 엘리트인 새는?","뇌조"],
+ ["땅투기꾼과 인신매매자를 일곱 글자로 하면?","땅팔자 사람팔자"],
+ ["딸기가 회사에서 잘리면?", "딸기시럽 (실업)"],
+ ["김을 불에 구우면 안 되는 이유는?", "기미, 주근깨가 생겨서"],
+ ["신하가 왕에게 공을 던지면서 하는 말은?", "송구하옵니다"],
+ ["돌잔치를 영어로 하면?", "락 페스티벌 (돌 = rock)"],
+ ["자가용의 반대말은?", "커용 (작을 자 <-> 클 커)"],
+ ["학이 침을 뱉으면?", "퇴학 (퉤, 학)"],
+ ["떡집 사장님이 주식을 안 하는 이유는?", "떡상할까 봐"]
+],
+know: [
+ ["폭력배가 가장 많은 나라는?","칠레 (칠래?)"],
+ ["굶는 사람이 가장 많은 나라는?","헝가리 (헝그리)"],
+ ["불이 가장 잘 나는 나라는?","불란서(프랑스)"],
+ ["코가 가장 큰 나라는?","멕시코"],
+ ["노루가 다니는 길은?","노르웨이 (노루 way)"],
+ ["담배가 목장에 간 이유는?","말보로 (말 보러)"],
+ ["간첩이 동물원에 가면 찾는 새는?","공작새 (공작 활동)"],
+ ["붉은 길 위에 동전이 떨어져 있다. 이 동전의 이름은?","홍길동전 (붉을 홍 + 길 + 동전)"],
+ ["임꺽정이 타고 다니는 차는?","으라차차차"],
+ ["버스는 버스인데 바다를 건너간 버스는?","콜럼버스"],
+ ["싸움을 가장 잘하는 오리는?","을지문덕"],
+ ["세상에서 머리카락이 가장 긴 사람은?","장발장"],
+ ["가수 샤이니가 다니는 고등학교는?","아미고 (샤이니 노래 제목)"],
+ ["간짜장이 일반 짜장보다 비싼 이유는?","간 때문이야 (광고 유행어)"],
+ ["나라 두 개가 합쳐지면?","콤비네이션 (combi + nation)"],
+ ["스타들이 서로 싸우면?","스타워즈"],
+ ["타이타닉호의 구명보트에는 몇 명이 탈 수 있을까?","9명 (구명 = nine 명)"],
+ ["강아지의 생일을 영어로 하면?","해피 버스데이 투 유 (해피 birth day too 유)"],
+ ["세상에서 가장 가난한 왕은?","최저임금 (최저 임 King)"],
+ ["'이심전심'을 넌센스로 풀면?","이순자가 심심하면 전두환도 심심하다"],
+ ["어르신들이 다니는 대학교는?","연세대학교"],
+ ["여름에도 눈이 쌓여 있는 산은?","설악산"],
+ ["백 마리의 소가 모여 사는 산은?","소백산"],
+ ["서울에서 길 잃은 아이가 가장 많은 동네는?","미아동"],
+ ["서울에서 종교가 없는 동네는?","무교동"],
+ ["해가 우는 곳은?","해운대"],
+ ["잠을 자는 사람이 많은 섬은?","안면도"],
+ ["항상 위쪽에만 있는 섬은?","위도"],
+ ["미녀들이 모여 사는 섬은?","진도"],
+ ["산타가 제일 좋아하는 차는?","투싼"],
+ ["대한민국 제일의 도시는?","거창"],
+ ["지구가 가장 힘들었던 시기는?","고생대"],
+ ["겨울에 설경이 아름다운 섬은?","설운도"],
+ ["말을 뒤로 타는 사람은?","마르셀 뒤샹"],
+ ["술을 사달라고 조르는 사람은?","조르주 쇠라"],
+ ["배 위에 세 마리의 용이 있으면?","배삼룡"],
+ ["사람이 죽지 않는 산맥은?", "안데스산맥 (안 데스)"],
+ ["새로 나온 욕은?", "뉴욕"],
+ ["누룽지를 영어로 하면?", "바비 브라운 (bobby brown)"],
+ ["호주의 화폐 단위는?", "호주머니"]
+]
+};
+
+const KEY = "nonsense-quiz-progress-v2";
+const $ = id => document.getElementById(id);
+
+let progress = load();
+let cur = {level:null, idx:-1};
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    const o = raw ? JSON.parse(raw) : {};
+    const out = {};
+    Object.keys(QUIZ).forEach(k => out[k] = Array.isArray(o[k]) ? o[k] : []);
+    return out;
+  }catch(e){
+    const out = {}; Object.keys(QUIZ).forEach(k => out[k] = []); return out;
+  }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(progress)); }catch(e){}
+}
+function solvedSet(level){ return new Set(progress[level]); }
+function isClear(level){ return solvedSet(level).size >= QUIZ[level].length; }
+
+/* ---------- 홈 화면 ---------- */
+function renderHome(){
+  const box = $("levels");
+  box.innerHTML = "";
+  Object.keys(LEVELS).forEach(key=>{
+    const L = LEVELS[key], total = QUIZ[key].length, done = solvedSet(key).size;
+    const pct = Math.round(done/total*100);
+    const b = document.createElement("button");
+    b.className = "level" + (done>=total ? " clear" : "");
+    b.innerHTML =
+      `<span class="emoji">${L.emoji}</span>
+       <span class="txt">
+         <b>${L.name}${done>=total ? " 🏆" : ""}</b>
+         <span class="desc">${L.desc}</span>
+         <span class="bar"><i style="width:${pct}%"></i></span>
+       </span>
+       <span class="cnt">${done} / ${total}<br>${done>=total ? "올클리어!" : "푼 문제"}</span>`;
+    b.onclick = ()=>start(key);
+    box.appendChild(b);
+  });
+}
+
+/* ---------- 퀴즈 ---------- */
+function start(level){
+  cur.level = level;
+  cur.idx = -1;
+  $("lvBadge").textContent = LEVELS[level].emoji + " " + LEVELS[level].name;
+  show("screen-quiz");
+  pickNext();
+}
+
+function pickNext(){
+  const level = cur.level, total = QUIZ[level].length;
+  const done = solvedSet(level);
+  let pool = [];
+  for(let i=0;i<total;i++) if(!done.has(i)) pool.push(i);
+
+  if(pool.length === 0){
+    // 올클리어 후에는 전체에서 랜덤 (직전 문제만 피함)
+    pool = [];
+    for(let i=0;i<total;i++) if(i !== cur.idx) pool.push(i);
+  }
+  cur.idx = pool[Math.floor(Math.random()*pool.length)];
+  render();
+}
+
+function render(){
+  const level = cur.level, total = QUIZ[level].length;
+  const done = solvedSet(level).size;
+  const [q,a] = QUIZ[level][cur.idx];
+
+  $("question").textContent = q;
+  $("answerText").textContent = a;
+  $("answerBox").classList.add("hide");
+  $("btnShow").classList.remove("hide");
+  $("btnNext").classList.add("hide");
+  $("clearMsg").classList.add("hide");
+  $("counter").textContent = `푼 문제 ${done} / ${total}`;
+  $("barFill").style.width = Math.round(done/total*100) + "%";
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+$("btnShow").onclick = ()=>{
+  const level = cur.level;
+  const wasClear = isClear(level);
+  if(!progress[level].includes(cur.idx)){
+    progress[level].push(cur.idx);
+    save();
+  }
+  const done = solvedSet(level).size, total = QUIZ[level].length;
+  $("counter").textContent = `푼 문제 ${done} / ${total}`;
+  $("barFill").style.width = Math.round(done/total*100) + "%";
+
+  $("answerBox").classList.remove("hide");
+  $("btnShow").classList.add("hide");
+  $("btnNext").classList.remove("hide");
+
+  if(!wasClear && isClear(level)){
+    $("clearMsg").innerHTML =
+      `🎉 <b>${LEVELS[level].name} 올클리어!</b><br>` +
+      `${total}문제를 모두 풀었어요. 이제부터는 문제가 랜덤으로 다시 나옵니다.`;
+    $("clearMsg").classList.remove("hide");
+  }
+};
+
+$("btnNext").onclick = pickNext;
+
+/* ---------- 푼 문제 목록 ---------- */
+function renderList(){
+  const level = cur.level, list = QUIZ[level];
+  const ids = progress[level].slice();
+  $("listTitle").textContent = `${LEVELS[level].emoji} ${LEVELS[level].name} 푼 문제`;
+  $("listCount").textContent = `${ids.length} / ${list.length}`;
+  const body = $("listBody");
+  if(ids.length === 0){
+    body.innerHTML = `<div class="empty">아직 푼 문제가 없어요.<br>정답을 보면 여기에 쌓입니다 📒</div>`;
+    return;
+  }
+  const ol = document.createElement("ol");
+  ol.className = "solved";
+  ids.forEach(i=>{
+    const [q,a] = list[i];
+    const li = document.createElement("li");
+    li.innerHTML = `<div class="sq">${q}</div><div class="sa">-> ${a}</div>`;
+    ol.appendChild(li);
+  });
+  body.innerHTML = "";
+  body.appendChild(ol);
+}
+
+/* ---------- 화면 전환 ---------- */
+function show(id){
+  ["screen-home","screen-quiz","screen-list"].forEach(s=>{
+    $(s).classList.toggle("hide", s !== id);
+  });
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+$("btnList").onclick = ()=>{ renderList(); show("screen-list"); };
+$("btnBackQuiz").onclick = ()=> show("screen-quiz");
+$("btnHome").onclick = ()=>{ renderHome(); show("screen-home"); };
+$("btnReset").onclick = ()=>{
+  if(confirm(`'${LEVELS[cur.level].name}' 난이도의 푼 문제 기록을 모두 지울까요?`)){
+    progress[cur.level] = [];
+    save();
+    renderList();
+    render();
+  }
+};
+
+renderHome();
+</script>
+</body>
+</html>
