@@ -2,8 +2,16 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>넌센스 퀴즈</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffe9a8">
+<meta name="description" content="아이와 함께 푸는 한국 넌센스 퀴즈 268문제. 난이도 4단계, 시간 제한 없음.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AZE">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
   :root{
     --bg1:#ffe9a8; --bg2:#ffc7d9; --bg3:#b6e5ff;
@@ -607,6 +615,13 @@ $("btnReset").onclick = ()=>{
 };
 
 renderHome();
+
+/* ---------- 서비스 워커 (오프라인 실행) ---------- */
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("service-worker.js").catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
